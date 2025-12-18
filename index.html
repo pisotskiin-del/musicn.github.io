@@ -8,11 +8,22 @@
 <style>
 body {
   margin: 0;
-  background: black;
-  color: white;
   font-family: Arial, sans-serif;
   text-align: center;
   overflow: hidden;
+
+  /* ФОНОВАЯ КАРТИНКА */
+  background: url("background.jpg") center / cover no-repeat fixed;
+  color: white;
+}
+
+/* затемнение для читаемости */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 0;
 }
 
 /* КНОПКА */
@@ -45,7 +56,7 @@ button {
     0 3px 0 #aaa,
     0 4px 0 #999,
     0 8px 15px rgba(0,0,0,0.6),
-    0 0 20px rgba(255,215,0,0.8);
+    0 0 25px rgba(255,215,0,0.9);
 
   transform: perspective(800px) rotateX(15deg);
   opacity: 0;
@@ -61,14 +72,14 @@ button {
   from {
     text-shadow:
       0 0 10px #fff,
-      0 0 20px #ffe066,
-      0 0 40px #ffd700;
+      0 0 25px #ffe066,
+      0 0 50px #ffd700;
   }
   to {
     text-shadow:
-      0 0 20px #fff,
-      0 0 40px #ffe066,
-      0 0 80px #ffd700;
+      0 0 25px #fff,
+      0 0 50px #ffe066,
+      0 0 90px #ffd700;
   }
 }
 
@@ -81,7 +92,7 @@ canvas {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 5;
 }
 </style>
 </head>
@@ -140,7 +151,7 @@ class Rocket {
   draw() {
     ctx.save();
     ctx.shadowColor = this.color;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20;
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
@@ -170,7 +181,7 @@ class Particle {
     ctx.save();
     ctx.globalAlpha=this.alpha;
     ctx.shadowColor=this.color;
-    ctx.shadowBlur=20;
+    ctx.shadowBlur=25;
     ctx.fillStyle=this.color;
     ctx.beginPath();
     ctx.arc(this.x,this.y,3,0,Math.PI*2);
@@ -180,15 +191,14 @@ class Particle {
 }
 
 function explode(x,y,color){
-  for(let i=0;i<80;i++){
+  for(let i=0;i<90;i++){
     particles.push(new Particle(x,y,color));
   }
 }
 
 /* АНИМАЦИЯ */
 function animate(){
-  ctx.fillStyle='rgba(0,0,0,0.25)';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
   rockets = rockets.filter(r=>{
     r.draw();
@@ -208,7 +218,6 @@ animate();
 /* СИНХРОНИЗАЦИЯ С МУЗЫКОЙ */
 function startFireworks(audio){
   let last = 0;
-
   audio.addEventListener('timeupdate', ()=>{
     const beat = 0.6;
     if(audio.currentTime - last > beat){
@@ -218,8 +227,8 @@ function startFireworks(audio){
   });
 
   audio.addEventListener('ended', ()=>{
-    for(let i=0;i<10;i++){
-      setTimeout(()=>rockets.push(new Rocket()), i*250);
+    for(let i=0;i<12;i++){
+      setTimeout(()=>rockets.push(new Rocket()), i*220);
     }
   });
 }

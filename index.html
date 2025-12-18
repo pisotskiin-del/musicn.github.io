@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Музыкальная открытка</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  overflow: hidden;
+}
+button {
+  position: relative;
+  z-index: 10;
+  margin-top: 40vh;
+  padding: 16px 36px;
+  font-size: 22px;
+  border-radius: 40px;
+  border: none;
+  cursor: pointer;
+}
+canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎉 Поздравляем! 🎉</h1>
+
+<button id="startBtn"
+onclick="
+  this.style.display='none';
+  const a=document.getElementById('music');
+  a.play();
+  window.startFireworks(a);
+">
+▶ Включить музыку
+</button>
+
+<audio id="music" src="music.mp3" preload="auto"></audio>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+addEventListener('resize', resize);
+
+/* =====================
+   ЧАСТИЦЫ
+===================== */
+let particles = [];
+let rockets = [];
+
+class Rocket {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = canvas.height;
+    this.vy = -(Math.random() * 6 + 7);
+    this.color = `hsl(${Math.random()*360},100%,60%)`;
+  }
+  update() {
+    this.y += this.vy;
+    this.vy += 0.15;
+    if (this.vy >= 0) {
+      explode(this.x, this.y, this.color);
+      return false;
+    }
+    return true;
+  }
+  draw() {
+    ctx.save();
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class Particle {
+  constructor(x,y,color){
+    this.x=x; this.y=y;
+    this.vx=(Math.random()-0.5)*6;
+    this.vy=(Math.random()-0.5)*6;
+    this.life=100;
+    this.alpha=1;
+    this.color=color;
+  }
+  update(){
+    this.x+=this.vx;
+    this.y+=this.vy;
+    this.vy+=0.05;
+    this.alpha-=0.015;
+    this.life--;
+  }
+  draw(){
+    ctx.save();
+    ctx.globalAlpha=this.alpha;
+    ctx.shadowColor=this.color;
+    ctx.shadowBlur=20;
+    ctx.fillStyle=this.color;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,3,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function explode(x,y,color){
+  for(let i=0;i<80;i++){
+    particles.push(new Particle(x,y,color));
+  }
+}
+
+/* =====================
+   АНИМАЦИЯ
+===================== */
+function animate(){
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  rockets = rockets.filter(r=>{
+    r.draw();
+    return r.update();
+  });
+
+  particles = particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.update();
+    p.draw();
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* =====================
+   СИНХРОНИЗАЦИЯ С МУЗЫКОЙ
+===================== */
+window.startFireworks = function(audio){
+  let last = 0;
+
+  audio.addEventListener('timeupdate', ()=>{
+    const beat = 0.6; // меняй под трек
+    if(audio.currentTime - last > beat){
+      rockets.push(new Rocket());
+      last = audio.currentTime;
+    }
+  });
+
+  // финальный салют в конце
+  audio.addEventListener('ended', ()=>{
+    for(let i=0;i<8;i++){
+      setTimeout(()=>rockets.push(new Rocket()), i*300);
+    }
+  });
+};
+</script>
+
+</body>
+</html>

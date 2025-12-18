@@ -6,169 +6,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  overflow: hidden;
-
-  /* ФОНОВАЯ КАРТИНКА */
-  background: url("background.jpg") center / cover no-repeat fixed;
-  color: white;
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
 }
 
-/* затемнение для читаемости */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.25);
-  z-index: 0;
+/* КОНТЕЙНЕР */
+#scene{
+  position:fixed;
+  inset:0;
 }
 
-/* КНОПКА */
-button {
-  position: relative;
-  z-index: 10;
-  margin-top: 40vh;
-  padding: 16px 36px;
-  font-size: 22px;
-  border-radius: 40px;
-  border: none;
-  cursor: pointer;
+/* ФОНОВАЯ ОТКРЫТКА */
+#bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
 }
 
-/* ТЕКСТ */
-#greeting {
-  position: relative;
-  z-index: 10;
-  margin-top: 30px;
-  font-weight: 900;
-  text-align: center;
-
-  font-size: clamp(28px, 6vw, 64px);
-  line-height: 1.2;
-  color: #fff;
-
-  text-shadow:
-    0 1px 0 #ccc,
-    0 2px 0 #bbb,
-    0 3px 0 #aaa,
-    0 4px 0 #999,
-    0 8px 15px rgba(0,0,0,0.6),
-    0 0 25px rgba(255,215,0,0.9);
-
-  transform: perspective(800px) rotateX(15deg);
-  opacity: 0;
-  transition: opacity 1.5s ease, transform 1.5s ease;
-}
-
-#greeting.show {
-  opacity: 1;
-  transform: perspective(800px) rotateX(0deg);
-}
-
-@keyframes glow {
-  from {
-    text-shadow:
-      0 0 10px #fff,
-      0 0 25px #ffe066,
-      0 0 50px #ffd700;
-  }
-  to {
-    text-shadow:
-      0 0 25px #fff,
-      0 0 50px #ffe066,
-      0 0 90px #ffd700;
-  }
-}
-
-#greeting.glow {
-  animation: glow 2.5s infinite alternate;
+/* затемнение */
+#overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.25);
+  z-index:1;
 }
 
 /* CANVAS */
-canvas {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 5;
+canvas{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
 }
+
+/* ТЕКСТ */
+#greeting{
+  position:absolute;
+  top:10%;
+  width:100%;
+  text-align:center;
+  font-weight:900;
+  font-size:clamp(26px,6vw,64px);
+  color:white;
+  z-index:3;
+  opacity:0;
+  transform:perspective(800px) rotateX(20deg);
+  transition:1.5s ease;
+
+  text-shadow:
+    0 1px 0 #ccc,
+    0 3px 0 #aaa,
+    0 6px 12px rgba(0,0,0,0.6),
+    0 0 30px gold;
+}
+
+#greeting.show{
+  opacity:1;
+  transform:perspective(800px) rotateX(0deg);
+}
+
+/* КНОПКА */
+#startBtn{
+  position:absolute;
+  top:45%;
+  left:50%;
+  transform:translateX(-50%);
+  padding:16px 36px;
+  font-size:22px;
+  border-radius:40px;
+  border:none;
+  cursor:pointer;
+  z-index:4;
+}
+
+@keyframes glow{
+  from{text-shadow:0 0 20px gold;}
+  to{text-shadow:0 0 60px gold;}
+}
+#greeting.glow{animation:glow 2.5s infinite alternate;}
 </style>
 </head>
 
 <body>
 
-<button id="startBtn"
-onclick="
-  this.style.display='none';
-  document.getElementById('greeting').classList.add('show','glow');
-  const a=document.getElementById('music');
-  a.play();
-  startFireworks(a);
-">
-▶ Включить музыку
-</button>
+<div id="scene">
 
-<div id="greeting">
-  С Праздником<br>святого Николая!
+  <img id="bg" src="card.jpg" alt="Открытка">
+
+  <div id="overlay"></div>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="greeting">
+    С Праздником<br>святого Николая!
+  </div>
+
+  <button id="startBtn"
+    onclick="
+      this.style.display='none';
+      greeting.classList.add('show','glow');
+      music.play();
+      startFireworks(music);
+    ">
+    ▶ Включить музыку
+  </button>
+
+  <audio id="music" src="music.mp3"></audio>
+
 </div>
 
-<audio id="music" src="music.mp3" preload="auto"></audio>
-<canvas id="canvas"></canvas>
-
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
 
 function resize(){
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
 }
-resize();
-addEventListener('resize', resize);
+resize(); addEventListener('resize',resize);
 
-let particles = [];
-let rockets = [];
+let rockets=[],particles=[];
 
-/* РАКЕТЫ */
-class Rocket {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = canvas.height;
-    this.vy = -(Math.random() * 6 + 8);
-    this.color = `hsl(${Math.random()*360},100%,60%)`;
+class Rocket{
+  constructor(){
+    this.x=Math.random()*canvas.width;
+    this.y=canvas.height;
+    this.vy=-(Math.random()*6+8);
+    this.color=`hsl(${Math.random()*360},100%,60%)`;
   }
-  update() {
-    this.y += this.vy;
-    this.vy += 0.15;
-    if (this.vy >= 0) {
-      explode(this.x, this.y, this.color);
+  update(){
+    this.y+=this.vy;
+    this.vy+=0.15;
+    if(this.vy>=0){
+      explode(this.x,this.y,this.color);
       return false;
     }
     return true;
   }
-  draw() {
+  draw(){
     ctx.save();
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = this.color;
+    ctx.shadowBlur=20;
+    ctx.shadowColor=this.color;
+    ctx.fillStyle=this.color;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
+    ctx.arc(this.x,this.y,3,0,Math.PI*2);
     ctx.fill();
     ctx.restore();
   }
 }
 
-/* ЧАСТИЦЫ */
-class Particle {
-  constructor(x,y,color){
+class Particle{
+  constructor(x,y,c){
     this.x=x; this.y=y;
     this.vx=(Math.random()-0.5)*6;
     this.vy=(Math.random()-0.5)*6;
     this.life=100;
     this.alpha=1;
-    this.color=color;
+    this.color=c;
   }
   update(){
     this.x+=this.vx;
@@ -180,8 +182,8 @@ class Particle {
   draw(){
     ctx.save();
     ctx.globalAlpha=this.alpha;
-    ctx.shadowColor=this.color;
     ctx.shadowBlur=25;
+    ctx.shadowColor=this.color;
     ctx.fillStyle=this.color;
     ctx.beginPath();
     ctx.arc(this.x,this.y,3,0,Math.PI*2);
@@ -190,45 +192,25 @@ class Particle {
   }
 }
 
-function explode(x,y,color){
-  for(let i=0;i<90;i++){
-    particles.push(new Particle(x,y,color));
-  }
+function explode(x,y,c){
+  for(let i=0;i<90;i++)particles.push(new Particle(x,y,c));
 }
 
-/* АНИМАЦИЯ */
 function animate(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  rockets = rockets.filter(r=>{
-    r.draw();
-    return r.update();
-  });
-
-  particles = particles.filter(p=>p.life>0);
-  particles.forEach(p=>{
-    p.update();
-    p.draw();
-  });
-
+  rockets=rockets.filter(r=>{r.draw(); return r.update();});
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{p.update();p.draw();});
   requestAnimationFrame(animate);
 }
 animate();
 
-/* СИНХРОНИЗАЦИЯ С МУЗЫКОЙ */
 function startFireworks(audio){
-  let last = 0;
-  audio.addEventListener('timeupdate', ()=>{
-    const beat = 0.6;
-    if(audio.currentTime - last > beat){
+  let last=0;
+  audio.addEventListener('timeupdate',()=>{
+    if(audio.currentTime-last>0.6){
       rockets.push(new Rocket());
-      last = audio.currentTime;
-    }
-  });
-
-  audio.addEventListener('ended', ()=>{
-    for(let i=0;i<12;i++){
-      setTimeout(()=>rockets.push(new Rocket()), i*220);
+      last=audio.currentTime;
     }
   });
 }
@@ -236,4 +218,3 @@ function startFireworks(audio){
 
 </body>
 </html>
-

@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Музыкальная открытка</title>
+<title>С Праздником святого Николая!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
@@ -13,6 +14,8 @@ body {
   text-align: center;
   overflow: hidden;
 }
+
+/* КНОПКА */
 button {
   position: relative;
   z-index: 10;
@@ -23,6 +26,57 @@ button {
   border: none;
   cursor: pointer;
 }
+
+/* ТЕКСТ */
+#greeting {
+  position: relative;
+  z-index: 10;
+  margin-top: 30px;
+  font-weight: 900;
+  text-align: center;
+
+  font-size: clamp(28px, 6vw, 64px);
+  line-height: 1.2;
+  color: #fff;
+
+  text-shadow:
+    0 1px 0 #ccc,
+    0 2px 0 #bbb,
+    0 3px 0 #aaa,
+    0 4px 0 #999,
+    0 8px 15px rgba(0,0,0,0.6),
+    0 0 20px rgba(255,215,0,0.8);
+
+  transform: perspective(800px) rotateX(15deg);
+  opacity: 0;
+  transition: opacity 1.5s ease, transform 1.5s ease;
+}
+
+#greeting.show {
+  opacity: 1;
+  transform: perspective(800px) rotateX(0deg);
+}
+
+@keyframes glow {
+  from {
+    text-shadow:
+      0 0 10px #fff,
+      0 0 20px #ffe066,
+      0 0 40px #ffd700;
+  }
+  to {
+    text-shadow:
+      0 0 20px #fff,
+      0 0 40px #ffe066,
+      0 0 80px #ffd700;
+  }
+}
+
+#greeting.glow {
+  animation: glow 2.5s infinite alternate;
+}
+
+/* CANVAS */
 canvas {
   position: fixed;
   inset: 0;
@@ -34,17 +88,20 @@ canvas {
 
 <body>
 
-<h1>🎉 Поздравляем! 🎉</h1>
-
 <button id="startBtn"
 onclick="
   this.style.display='none';
+  document.getElementById('greeting').classList.add('show','glow');
   const a=document.getElementById('music');
   a.play();
-  window.startFireworks(a);
+  startFireworks(a);
 ">
 ▶ Включить музыку
 </button>
+
+<div id="greeting">
+  С Праздником<br>святого Николая!
+</div>
 
 <audio id="music" src="music.mp3" preload="auto"></audio>
 <canvas id="canvas"></canvas>
@@ -60,17 +117,15 @@ function resize(){
 resize();
 addEventListener('resize', resize);
 
-/* =====================
-   ЧАСТИЦЫ
-===================== */
 let particles = [];
 let rockets = [];
 
+/* РАКЕТЫ */
 class Rocket {
   constructor() {
     this.x = Math.random() * canvas.width;
     this.y = canvas.height;
-    this.vy = -(Math.random() * 6 + 7);
+    this.vy = -(Math.random() * 6 + 8);
     this.color = `hsl(${Math.random()*360},100%,60%)`;
   }
   update() {
@@ -94,6 +149,7 @@ class Rocket {
   }
 }
 
+/* ЧАСТИЦЫ */
 class Particle {
   constructor(x,y,color){
     this.x=x; this.y=y;
@@ -129,9 +185,7 @@ function explode(x,y,color){
   }
 }
 
-/* =====================
-   АНИМАЦИЯ
-===================== */
+/* АНИМАЦИЯ */
 function animate(){
   ctx.fillStyle='rgba(0,0,0,0.25)';
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -151,28 +205,26 @@ function animate(){
 }
 animate();
 
-/* =====================
-   СИНХРОНИЗАЦИЯ С МУЗЫКОЙ
-===================== */
-window.startFireworks = function(audio){
+/* СИНХРОНИЗАЦИЯ С МУЗЫКОЙ */
+function startFireworks(audio){
   let last = 0;
 
   audio.addEventListener('timeupdate', ()=>{
-    const beat = 0.6; // меняй под трек
+    const beat = 0.6;
     if(audio.currentTime - last > beat){
       rockets.push(new Rocket());
       last = audio.currentTime;
     }
   });
 
-  // финальный салют в конце
   audio.addEventListener('ended', ()=>{
-    for(let i=0;i<8;i++){
-      setTimeout(()=>rockets.push(new Rocket()), i*300);
+    for(let i=0;i<10;i++){
+      setTimeout(()=>rockets.push(new Rocket()), i*250);
     }
   });
-};
+}
 </script>
 
 </body>
 </html>
+
